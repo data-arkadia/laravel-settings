@@ -1,0 +1,31 @@
+{
+    "name": "data-arkadia/laravel-settings",
+    "description": "Manage settings within a Laravel application.",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "DataArkadia\\LaravelSettings\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Deo Leter",
+            "email": "deoleter@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DataArkadia\\LaravelSettings\\LaravelSettingsServiceProvider"
+            ],
+            "aliases": {
+                "SettingManager": "DataArkadia\\LaravelSettings\\Facades\\SettingFacade"
+            }
+        }
+    }
+}
