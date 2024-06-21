@@ -2,12 +2,10 @@
 
 namespace DataArkadia\LaravelSettings\Nova\Resources;
 
-use App\Models\Color;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Badge;
-use Laravel\Nova\Fields\Hidden;
 use Laravel\Nova\Fields\Select;
 use App\Nova\Resources\Resource;
 use Laravel\Nova\Fields\FormData;
@@ -16,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use DataArkadia\LaravelSettings\Enums\DataType;
 use DataArkadia\LaravelSettings\Models\SettingValue;
+use DataArkadia\LaravelSettings\Helpers\TwColorHelper;
 
 class Setting extends Resource
 {
@@ -196,7 +195,7 @@ class Setting extends Resource
                 break;
 
             case 'tw-color':
-                $colors = Color::colors();
+                $colors = TwColorHelper::colors();
                 $dependsOn = [];
 
                 foreach ($colors as $colorName => $color) {
@@ -204,7 +203,7 @@ class Setting extends Resource
                 }
 
                 foreach ($colors as $colorName => $palette) {
-                    $palette = view('admin.colors')
+                    $palette = view('laravel-settings::colors')
                         ->with('role', $this->resource->slug)
                         ->with('colorName', $colorName)
                         ->with('palette', $palette)

@@ -51,6 +51,7 @@ class LaravelSettingsServiceProvider extends ServiceProvider
         $this->publishConfigs();
         $this->bootBladeDirectives();
         $this->bootModelObservers();
+        $this->registerViews();
     }
 
     private function publishMigrations(): void
@@ -74,7 +75,7 @@ class LaravelSettingsServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../config/config.php' => config_path('laravel-settings.php'),
-            ], 'config');
+            ], 'laravel-settings-config');
         }
     }
 
@@ -88,5 +89,14 @@ class LaravelSettingsServiceProvider extends ServiceProvider
     private function bootModelObservers(): void
     {
         SettingValue::observe(SettingValueObserver::class);
+    }
+
+    private function registerViews(): void
+    {
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laravel-settings');
+
+        $this->publishes([
+            __DIR__ . '/../resources/views' => resource_path('views/vendor/laravel-settings'),
+        ], 'laravel-settings-views');
     }
 }
