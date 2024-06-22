@@ -1,8 +1,11 @@
 <?php
 
 return [
+    'useCache' => env('LARAVEL_SETTING_USE_CACHE', true),
+
+    'storeSettingValuesPerUser' => true,
+
     'nova' => [
-        'categoriesAreManageable' => env('SETTING_NOVA_CATEGORIES_ARE_MANAGEABLE', false),
         'settingsShowAllFields' => env('SETTING_NOVA_SETTINGS_SHOW_ALL_FIELDS', false),
     ],
 ];

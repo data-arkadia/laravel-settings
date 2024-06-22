@@ -18,6 +18,7 @@ class SettingValue extends Model
      * @var array<string>
      */
     protected $fillable = [
+        'user_id',
         'setting_id',
         'value',
     ];
@@ -33,6 +34,17 @@ class SettingValue extends Model
     }
 
     /**
+     * Scope a query to only include setting
+     * values that belong to the given user.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     */
+    public function scopeForUser($query, $user): void
+    {
+        $query->where('user_id', $user->id);
+    }
+
+    /**
      * Capability to store this value
      * in Cache with its appropriate key.
      *
@@ -42,14 +54,17 @@ class SettingValue extends Model
     {
         $setting = $this->setting;
         $settingCategory = $setting->setting_category;
-
-        $settingName = $settingCategory->slug.'.'.$setting->slug;
+        $settingName = sprintf('%s.%s', $settingCategory->slug, $setting->slug);
         $settingValue = $this->value;
-
-        SettingManager::cacheReferenceableSettingValue(
-            $settingName,
+        $cacheKey = SettingManager::createCacheKey($settingName);
+        $referenceableSettingValue = SettingManager::createReferenceableSettingValue(
             $setting->data_type,
             $settingValue
+        );
+
+        SettingManager::referenceableSettingValueCacher(
+            $cacheKey,
+            $referenceableSettingValue
         );
     }
 }

@@ -8,9 +8,9 @@ use DataArkadia\LaravelSettings\Models\Setting;
 use DataArkadia\LaravelSettings\Models\SettingValue;
 use DataArkadia\LaravelSettings\Models\SettingCategory;
 use DataArkadia\LaravelSettings\Policies\SettingPolicy;
-use DataArkadia\LaravelSettings\Console\Commands\InitPackage;
 use DataArkadia\LaravelSettings\Observers\SettingValueObserver;
 use DataArkadia\LaravelSettings\Policies\SettingCategoryPolicy;
+use DataArkadia\LaravelSettings\Console\Commands\FlushAllLaravelSettings;
 
 class LaravelSettingsServiceProvider extends ServiceProvider
 {
@@ -56,16 +56,14 @@ class LaravelSettingsServiceProvider extends ServiceProvider
 
     private function publishMigrations(): void
     {
-        $this->publishes([
-            __DIR__ . '/../database/migrations/optional' => database_path('migrations'),
-        ], 'laravel-settings-sites-migration');
+        //
     }
 
     private function bootCommands(): void
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                InitPackage::class,
+                FlushAllLaravelSettings::class,
             ]);
         }
     }

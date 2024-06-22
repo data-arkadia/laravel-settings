@@ -13,9 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('sites', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('setting_values', function (Blueprint $table) {
+            $table->integer('user_id')
+                ->nullable()
+                ->after('id');
+
+            $table->index('user_id');
         });
     }
 
@@ -26,6 +29,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sites');
+        Schema::table('setting_values', function (Blueprint $table) {
+            $table->dropColumn('user_id');
+        });
     }
 };

@@ -20,7 +20,12 @@ class SettingManager
         $valueToReturn = null;
 
         try {
-            $value = $this->getFromCache($settingName);
+            $value = null;
+
+            if (config('laravel-settings.useCache')) {
+                $cacheKey = $this->createCacheKey($settingName);
+                $value = $this->getFromCache($cacheKey);
+            }
 
             if ($value == null) {
                 $value = $this->getFromDatabase($settingName);
@@ -43,12 +48,16 @@ class SettingManager
     /**
      * Get the value of a setting from the cache.
      *
-     * @param string $settingName The name of the setting of which a value is requested
-     * @return array
+     * @param string $cacheKey The key to retrieve the setting from Cache
+     * @return array|null
      */
-    private function getFromCache(string $settingName): array
+    private function getFromCache(string $cacheKey): ?array
     {
-        $valueFromCache = (array) Cache::get($settingName);
+        $valueFromCache = (array) Cache::get($cacheKey);
+
+        if (empty($valueFromCache)) {
+            return null;
+        }
 
         return $valueFromCache;
     }
@@ -70,29 +79,57 @@ class SettingManager
             $categorySlug = $settingNameParts[0];
             $settingNameSlug = $settingNameParts[1];
 
+            // Get setting category
             $settingCategory = SettingCategory::where('slug', $categorySlug)
                 ->first();
+
+            // Get setting
             $setting = $settingCategory->settings
                 ->where('slug', $settingNameSlug)
                 ->first();
-            $settingValue = $setting->setting_value->value;
+
+            // Get setting value
+            if (config('laravel-settings.storeSettingValuesPerUser')) {
+                $settingValue = $setting->setting_value()
+                    ->where('user_id', auth()->id())
+                    ->first()
+                    ->value;
+            } else {
+                $settingValue = $setting->setting_value->value;
+            }
         } finally {
             if ($settingCategory == null OR $setting == null) {
                 throw new Exception('Setting Category or Setting does not exist: '.$settingName);
             }
 
+            $cacheKey = $this->createCacheKey($settingName);
             $referenceableSettingValue = $this->createReferenceableSettingValue(
                 $setting->data_type,
                 $settingValue
             );
 
             $this->referenceableSettingValueCacher(
-                $settingName,
+                $cacheKey,
                 $referenceableSettingValue
             );
 
             return $referenceableSettingValue;
         }
+    }
+
+    /**
+     * Create name for cache key.
+     *
+     * @param string $settingName The name of the setting
+     * @return string
+     */
+    public function createCacheKey(string $settingName): string
+    {
+        if (config('laravel-settings.storeSettingValuesPerUser')) {
+            $settingName = auth()->id().'.'.$settingName;
+        }
+
+        return $settingName;
     }
 
     /**
@@ -116,34 +153,12 @@ class SettingManager
     /**
      * Wrapper for storing a referenceable setting in Cache.
      *
-     * @param string $settingName The name of the setting which will be the Cache key
+     * @param string $cacheKey The key to store the setting under in Cache
      * @param array $referenceableSettingValue The formatted setting that should be cached
      * @return void
      */
-    private function referenceableSettingValueCacher(string $settingName, array $referenceableSettingValue): void
+    public function referenceableSettingValueCacher(string $cacheKey, array $referenceableSettingValue): void
     {
-        Cache::put($settingName, $referenceableSettingValue);
-    }
-
-    /**
-     * Wrapper for taking raw setting data to format
-     * to a referenceable setting and storing it in Cache.
-     *
-     * @param string $settingName The name of the setting which will be the Cache key
-     * @param string $valueDataType The data type of the setting's value
-     * @param mixed $settingValue The value of the setting
-     * @return void
-     */
-    public function cacheReferenceableSettingValue(string $settingName, string $valueDataType, mixed $settingValue): void
-    {
-        $referenceableSettingValue = $this->createReferenceableSettingValue(
-            $valueDataType,
-            $settingValue
-        );
-
-        $this->referenceableSettingValueCacher(
-            $settingName,
-            $referenceableSettingValue
-        );
+        Cache::put($cacheKey, $referenceableSettingValue);
     }
 }

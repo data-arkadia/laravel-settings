@@ -112,7 +112,14 @@ class Setting extends Resource
 
     protected function determineValueFieldOnIndex()
     {
-        $value = $this->resource->setting_value;
+        // $value = $this->resource->setting_value;
+        if (config('laravel-settings.storeSettingValuesPerUser')) {
+            $value = $this->resource->setting_value()
+                ->where('user_id', auth()->id())
+                ->first();
+        } else {
+            $value = $this->resource->setting_value;
+        }
 
         if ($value AND strlen($value->value) == 0) {
             $value = null;
@@ -131,9 +138,9 @@ class Setting extends Resource
 
         switch ($this->resource->data_type) {
             case 'boolean':
-                $field = Text::make('Value', null, function () {
-                    if ($this->resource->setting_value) {
-                        $value = $this->resource->setting_value->value;
+                $field = Text::make('Value', null, function () use ($value) {
+                    if ($value) {
+                        $value = $value->value;
 
                         if ((bool) $value) {
                             return 'Yes';
@@ -147,9 +154,9 @@ class Setting extends Resource
                 break;
 
             default:
-                $field = Text::make('Value', null, function () {
-                    if ($this->resource->setting_value) {
-                        $value = $this->resource->setting_value->value;
+                $field = Text::make('Value', null, function () use ($value) {
+                    if ($value) {
+                        $value = $value->value;
 
                         if (strlen($value) > 50) {
                             $value = substr($value, 0, 47).'...';
@@ -172,6 +179,7 @@ class Setting extends Resource
             $model->setting_value()
                 ->firstOrCreate()
                 ->update([
+                    'user_id' => auth()->id(),
                     'value' => $request->input('setting_value_value'),
                 ]);
         };
