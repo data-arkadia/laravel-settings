@@ -53,6 +53,11 @@ class Setting extends Model
      */
     public function setting_value(): HasOne
     {
+        if (config('laravel-settings.storeSettingValuesPerUser')) {
+            return $this->hasOne(SettingValue::class)
+                ->where('user_id', auth()->id());
+        }
+
         return $this->hasOne(SettingValue::class);
     }
 }

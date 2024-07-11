@@ -10,8 +10,8 @@ if (!function_exists('setting')) {
      * @param string $defaultValue Return a default value if no value was found
      * @return mixed
      */
-    function setting(mixed $settingName, string $defaultValue = null): mixed
+    function setting(mixed $settingName, string $defaultValue = null, $userId = null): mixed
     {
-        return SettingManager::get($settingName, $defaultValue);
+        return SettingManager::get($settingName, $defaultValue, $userId);
     }
 }

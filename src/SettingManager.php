@@ -8,6 +8,8 @@ use DataArkadia\LaravelSettings\Models\SettingCategory;
 
 class SettingManager
 {
+    private ?int $userId = null;
+
     /**
      * Get the value of a Setting.
      *
@@ -15,9 +17,11 @@ class SettingManager
      * @param mixed $defaultValue Return a default value if no value was found
      * @return mixed
      */
-    public function get(string $settingName, mixed $defaultValue = null): mixed
+    public function get(string $settingName, mixed $defaultValue = null, $userId = null): mixed
     {
         $valueToReturn = null;
+
+        $this->userId = $userId ?? auth()->id();
 
         try {
             $value = null;
@@ -91,7 +95,7 @@ class SettingManager
             // Get setting value
             if (config('laravel-settings.storeSettingValuesPerUser')) {
                 $settingValue = $setting->setting_value()
-                    ->where('user_id', auth()->id())
+                    ->where('user_id', $this->userId)
                     ->first()
                     ->value;
             } else {
@@ -125,8 +129,14 @@ class SettingManager
      */
     public function createCacheKey(string $settingName): string
     {
+        $userId = $this->userId ?? auth()->id();
+
         if (config('laravel-settings.storeSettingValuesPerUser')) {
-            $settingName = auth()->id().'.'.$settingName;
+            if ($userId === null) {
+                throw new Exception('User ID is required when storing setting values per user.');
+            }
+
+            $settingName = $userId.'.'.$settingName;
         }
 
         return $settingName;
